@@ -28,14 +28,14 @@ public class VoronoiGenerator {
 
         for (Triangle2D t : delaunay) {
             for (Vector2D p : t) {
-                Polygon2D polygon = constructPolygon(p, t);
+                Polygon2D polygon = constructPolygon(p, t, delaunay);
                 polygons.add(polygon);
             }
         }
         return polygons;
     }
 
-    Polygon2D triangleListToPolygon(List<Triangle2D> triangles) {
+    private Polygon2D triangleListToPolygon(List<Triangle2D> triangles) {
         List<Vector2D> vertices = new ArrayList<>();
         for (Triangle2D triangle : triangles) {
             vertices.add(calcIntersection(triangle));
@@ -44,7 +44,7 @@ public class VoronoiGenerator {
     }
 
 
-    Vector2D[] calcPerpendicularBisector(Vector2D p1, Vector2D p2) {
+    private Vector2D[] calcPerpendicularBisector(Vector2D p1, Vector2D p2) {
         Vector2D diff = new Vector2D(p2.x - p1.x, p2.y - p1.y);
         double[] v = new double[]{diff.x, diff.y, 0};
         double[] z = new double[]{0, 0, 1};
@@ -88,8 +88,52 @@ public class VoronoiGenerator {
         return line_intersection(pb1, pb2);
     }
 
-    private Polygon2D constructPolygon(final Vector2D p, final Triangle2D t) {
-        return triangleListToPolygon(getTrianglesAroundPoint(p, t));
+    private List<Triangle2D> getTrianglesAroundPoint(final Vector2D p, final Triangle2D t, final List<Triangle2D> all) {
+        Triangle2D thisT = t;
+        List<Triangle2D> triangles = new ArrayList<>();
+        while (true) {
+            triangles.add(thisT);
+            Triangle2D nextT = getNextTriangle(p, all, triangles);
+
+            if (nextT == null) {
+                break;
+            }
+
+            thisT = nextT;
+        }
+        return triangles;
+    }
+
+    private boolean valid(Triangle2D t1, List<Triangle2D> triangles) {
+        if (t1 == null) {
+            return false;
+        }
+        for (Triangle2D t : triangles) {
+            if (equalT(t, t1)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean equalT(Triangle2D t1, Triangle2D t2) {
+        return t1 != null && t2 != null && t1.a.equals(t2.a) && t1.b.equals(t2.b) && t1.c.equals(t2.c);
+    }
+
+    private Triangle2D getNextTriangle(final Vector2D p, final List<Triangle2D> t, final List<Triangle2D> lastT) {
+        for (Triangle2D ti : t) {
+            if (valid(ti, lastT)) {
+                if (ti.a.equals(p) || ti.b.equals(p) || ti.c.equals(p)){
+                    return ti;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private Polygon2D constructPolygon(final Vector2D p, final Triangle2D t, final List<Triangle2D> all) {
+        return triangleListToPolygon(getTrianglesAroundPoint(p, t, all));
     }
 
     public List<Polygon2D> getPolygons() {

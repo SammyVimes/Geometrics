@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,14 +14,17 @@ import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 import com.gitintheshell.geometrics.base.NotEnoughPointsException;
-import com.gitintheshell.geometrics.base.Polygon2D;
 import com.gitintheshell.geometrics.base.Triangle2D;
 import com.gitintheshell.geometrics.base.Vector2D;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import com.gitintheshell.geometrics.voronoi.GraphEdge;
+import com.gitintheshell.geometrics.voronoi.Voronoi;
 
 /**
  * Created by Semyon on 20.01.2018.
@@ -39,7 +41,9 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
 
     private boolean delaunayMode = true;
 
-    VoronoiGenerator voronoiGenerator = new VoronoiGenerator();
+//    VoronoiGeneratorOld voronoiGeneratorOld = new VoronoiGeneratorOld();
+    List<GraphEdge> graphEdges = new ArrayList<>();
+    Voronoi voronoi = new Voronoi(1.0d);
 
     public void setDelaunayMode(final boolean delaunayMode) {
         this.delaunayMode = delaunayMode;
@@ -96,7 +100,19 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
         executor.execute(() -> {
             try {
                 delaunayTriangulator.triangulate();
-                voronoiGenerator.generate(delaunayTriangulator.getTriangles());
+
+                double[] xs = new double[pointSet.size()];
+                double[] ys = new double[pointSet.size()];
+                for (int i = 0; i < pointSet.size(); i++) {
+                    Vector2D vector2D = pointSet.get(i);
+                    xs[i] = vector2D.x;
+                    ys[i] = vector2D.y;
+                }
+                graphEdges = voronoi.generateVoronoi(xs, ys, -10_000, 10_000, -10_000, 10_000);
+                if (graphEdges == null) {
+                    graphEdges = Collections.emptyList();
+                }
+//                voronoiGeneratorOld.generate(delaunayTriangulator.getTriangles());
                 ready = true;
                 postInvalidate();
             } catch (NotEnoughPointsException e1) {
@@ -140,20 +156,37 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
             }
         } else {
 
-            final List<Polygon2D> polygons = voronoiGenerator.getPolygons();
-            for (int i = 0; i < polygons.size(); i++) {
-                final Polygon2D polygon = polygons.get(i);
-                final List<Vector2D> vertices = polygon.getVertices();
-
-                Path path = new Path();
-                path.reset();
-                path.moveTo((float) vertices.get(0).x, (float) vertices.get(0).y);
-                final List<Vector2D> vector2Ds = vertices.subList(1, vertices.size());
-                for (Vector2D vertice : vector2Ds) {
-                    path.lineTo((float) vertice.x, (float) vertice.y);
-                }
-                canvas.drawPath(path, voronoiPaint);
+//            final List<Polygon2D> polygons = voronoiGeneratorOld.getPolygons();
+//            for (int i = 0; i < polygons.size(); i++) {
+//                final Polygon2D polygon = polygons.get(i);
+//                final List<Vector2D> vertices = polygon.getVertices();
+//
+//                Path path = new Path();
+//                path.reset();
+//                path.moveTo((float) vertices.get(0).x, (float) vertices.get(0).y);
+//                final List<Vector2D> vector2Ds = vertices.subList(1, vertices.size());
+//                for (Vector2D vertice : vector2Ds) {
+//                    path.lineTo((float) vertice.x, (float) vertice.y);
+//                }
+//                canvas.drawPath(path, voronoiPaint);
+//            }
+            for (GraphEdge graphEdge : graphEdges) {
+                canvas.drawLine((float) graphEdge.x1, (float) graphEdge.y1, (float) graphEdge.x2, (float) graphEdge.y2, voronoiPaint);
             }
+//            final List<Polygon2D> polygons = voronoiGeneratorOld.getPolygons();
+//            for (int i = 0; i < polygons.size(); i++) {
+//                final Polygon2D polygon = polygons.get(i);
+//                final List<Vector2D> vertices = polygon.getVertices();
+//
+//                Path path = new Path();
+//                path.reset();
+//                path.moveTo((float) vertices.get(0).x, (float) vertices.get(0).y);
+//                final List<Vector2D> vector2Ds = vertices.subList(1, vertices.size());
+//                for (Vector2D vertice : vector2Ds) {
+//                    path.lineTo((float) vertice.x, (float) vertice.y);
+//                }
+//                canvas.drawPath(path, voronoiPaint);
+//            }
 
         }
 
