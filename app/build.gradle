@@ -1,0 +1,62 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'me.tatarka:gradle-retrolambda:3.4.0'
+    }
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'android-apt'
+
+retrolambda {
+    Properties properties = new Properties()
+    def file = project.rootProject.file("config.properties")
+    // загрузим конфиг для ретролямбды, если он есть
+    // там прописываются пути до компилятора 8 и "старой" джавы, а так же версия старой джавы
+    // кажется, это было нужно только для старых версий...
+    if (file.exists()) {
+        properties.load(file.newDataInputStream())
+        jdk properties.getProperty("JDK8_PATH")
+        oldJdk properties.getProperty("OLD_JDK_PATH")
+        javaVersion JavaVersion.valueOf(properties.getProperty("OLD_JDK_VERSION") as String)
+    }
+    defaultMethods false
+    incremental true
+}
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "com.gitintheshell.geometrics"
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:2.2.0'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+}
