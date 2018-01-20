@@ -16,20 +16,44 @@ import java.util.Set;
 
 public class VoronoiGenerator {
 
+    public static final double initialSize = 10_000;
+
     private List<Polygon2D> polygons = new ArrayList<>();
 
     public void generate(final List<Triangle2D> triangles) {
         // Keep track of sites done; no drawing for initial triangles sites
         polygons = new ArrayList<>();
         Set<Vector2D> done = new HashSet<>();
+
         for (Triangle2D triangle : triangles) {
             for (Vector2D site : triangle) {
-                if (done.contains(site)) continue;
+                if (done.contains(site)) {
+                    continue;
+                }
                 done.add(site);
                 List<Triangle2D> list = surroundingTriangles(triangles, site, triangle);
 
+                if (list.size() < 3) {
+                    // тут только мы сами
+
+                    double aX = (triangle.b.x - triangle.a.x) + (triangle.c.x - triangle.a.x);
+                    double aY = triangle.b.y;
+
+                    list.add(new Triangle2D(triangle.b, triangle.c, new Vector2D(aX, aY)));
+
+
+                    double bX = triangle.b.x;
+                    double bY = triangle.a.y * 2;
+
+                    list.add(new Triangle2D(triangle.a, triangle.c, new Vector2D(bX, bY)));
+
+                    double cX = triangle.c.x - (triangle.c.x - triangle.a.x) - (triangle.b.x - triangle.a.x);
+                    double cY = triangle.b.y;
+
+                    list.add(new Triangle2D(triangle.a, triangle.b, new Vector2D(cX, cY)));
+                }
+
                 List<Vector2D> vertices = new ArrayList<>(list.size());
-                int i = 0;
                 for (Triangle2D tri : list) {
                     vertices.add(tri.getCircumcenter());
                 }

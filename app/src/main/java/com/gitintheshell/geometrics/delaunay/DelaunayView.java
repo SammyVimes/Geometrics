@@ -34,6 +34,8 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
     private List<Vector2D> pointSet = new ArrayList<>();
     private Paint paint = new Paint();
     private Paint circlePaint = new Paint();
+    private Paint voronoiPaint = new Paint();
+    private Paint pointPaint = new Paint();
 
     private boolean delaunayMode = true;
 
@@ -76,6 +78,15 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
         circlePaint.setColor(Color.BLUE);
         circlePaint.setStrokeWidth(5.0f);
         delaunayTriangulator = new DelaunayTriangulator(pointSet);
+
+        pointPaint = new Paint();
+        pointPaint.setColor(Color.MAGENTA);
+        pointPaint.setStrokeWidth(30.0f);
+
+        voronoiPaint.setStyle(Paint.Style.STROKE);
+        voronoiPaint.setColor(Color.GREEN);
+        voronoiPaint.setStrokeWidth(5.0f);
+
     }
 
     private Executor executor = Executors.newSingleThreadExecutor();
@@ -86,7 +97,7 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
             try {
                 delaunayTriangulator.triangulate();
                 voronoiGenerator.generate(delaunayTriangulator.getTriangles());
-
+                ready = true;
                 postInvalidate();
             } catch (NotEnoughPointsException e1) {
             }
@@ -97,18 +108,27 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
     protected void onDraw(final Canvas canvas) {
         canvas.drawColor(Color.BLACK);
 
-        for (int i = 0; i < delaunayTriangulator.getTriangles().size(); i++) {
-            Triangle2D triangle = delaunayTriangulator.getTriangles().get(i);
-            Vector2D a = triangle.a;
-            Vector2D b = triangle.b;
-            Vector2D c = triangle.c;
+        for (Vector2D a : pointSet) {
+            canvas.drawPoint((float) a.x, (float) a.y, pointPaint);
+        }
 
-            canvas.drawLine((float) a.x, (float) a.y, (float) b.x, (float) b.y, paint);
-            canvas.drawLine((float) b.x, (float) b.y, (float) c.x, (float) c.y, paint);
-            canvas.drawLine((float) c.x, (float) c.y, (float) a.x, (float) a.y, paint);
+        if (!ready) {
+            return;
         }
 
         if (delaunayMode) {
+
+            for (int i = 0; i < delaunayTriangulator.getTriangles().size(); i++) {
+                Triangle2D triangle = delaunayTriangulator.getTriangles().get(i);
+                Vector2D a = triangle.a;
+                Vector2D b = triangle.b;
+                Vector2D c = triangle.c;
+
+                canvas.drawLine((float) a.x, (float) a.y, (float) b.x, (float) b.y, paint);
+                canvas.drawLine((float) b.x, (float) b.y, (float) c.x, (float) c.y, paint);
+                canvas.drawLine((float) c.x, (float) c.y, (float) a.x, (float) a.y, paint);
+            }
+
             for (int i = 0; i < delaunayTriangulator.getTriangles().size(); i++) {
                 Triangle2D triangle = delaunayTriangulator.getTriangles().get(i);
                 Vector2D a = triangle.a;
@@ -128,10 +148,11 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
                 Path path = new Path();
                 path.reset();
                 path.moveTo((float) vertices.get(0).x, (float) vertices.get(0).y);
-                for (Vector2D vertice : vertices.subList(1, vertices.size())) {
+                final List<Vector2D> vector2Ds = vertices.subList(1, vertices.size());
+                for (Vector2D vertice : vector2Ds) {
                     path.lineTo((float) vertice.x, (float) vertice.y);
                 }
-                canvas.drawPath(path, circlePaint);
+                canvas.drawPath(path, voronoiPaint);
             }
 
         }
@@ -149,11 +170,15 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
 
     }
 
+    volatile boolean ready = true;
+
     @Override
     public boolean onSingleTapUp(final MotionEvent e) {
         final float x = e.getX();
         final float y = e.getY();
         pointSet.add(new Vector2D(x, y));
+        invalidate();
+        ready = false;
         retriangulate();
         return true;
     }
