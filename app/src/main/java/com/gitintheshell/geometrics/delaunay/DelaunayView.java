@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,11 +15,14 @@ import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 import com.gitintheshell.geometrics.base.NotEnoughPointsException;
+import com.gitintheshell.geometrics.base.Polygon2D;
 import com.gitintheshell.geometrics.base.Triangle2D;
 import com.gitintheshell.geometrics.base.Vector2D;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Semyon on 20.01.2018.
@@ -26,10 +30,19 @@ import java.util.List;
 
 public class DelaunayView extends FrameLayout implements GestureDetector.OnGestureListener {
 
-    DelaunayTriangulator delaunayTriangulator;
-    List<Vector2D> pointSet = new ArrayList<>();
+    private DelaunayTriangulator delaunayTriangulator;
+    private List<Vector2D> pointSet = new ArrayList<>();
     private Paint paint = new Paint();
     private Paint circlePaint = new Paint();
+
+    private boolean delaunayMode = true;
+
+    VoronoiGenerator voronoiGenerator = new VoronoiGenerator();
+
+    public void setDelaunayMode(final boolean delaunayMode) {
+        this.delaunayMode = delaunayMode;
+        invalidate();
+    }
 
     public DelaunayView(@NonNull final Context context) {
         super(context);
@@ -63,15 +76,21 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
         circlePaint.setColor(Color.BLUE);
         circlePaint.setStrokeWidth(5.0f);
         delaunayTriangulator = new DelaunayTriangulator(pointSet);
-
     }
 
+    private Executor executor = Executors.newSingleThreadExecutor();
+
     private void retriangulate() {
-        try {
-            delaunayTriangulator.triangulate();
-            invalidate();
-        } catch (NotEnoughPointsException e1) {
-        }
+
+        executor.execute(() -> {
+            try {
+                delaunayTriangulator.triangulate();
+                voronoiGenerator.generate(delaunayTriangulator.getTriangles());
+
+                postInvalidate();
+            } catch (NotEnoughPointsException e1) {
+            }
+        });
     }
 
     @Override
@@ -89,15 +108,31 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
             canvas.drawLine((float) c.x, (float) c.y, (float) a.x, (float) a.y, paint);
         }
 
-        for (int i = 0; i < delaunayTriangulator.getTriangles().size(); i++) {
-            Triangle2D triangle = delaunayTriangulator.getTriangles().get(i);
-            Vector2D a = triangle.a;
-            Vector2D b = triangle.b;
-            Vector2D c = triangle.c;
+        if (delaunayMode) {
+            for (int i = 0; i < delaunayTriangulator.getTriangles().size(); i++) {
+                Triangle2D triangle = delaunayTriangulator.getTriangles().get(i);
+                Vector2D a = triangle.a;
 
-            final Vector2D circumcenter = triangle.getCircumcenter();
-            final double distance = circumcenter.distance(a);
-            canvas.drawCircle((float) circumcenter.x, (float) circumcenter.y, (float) distance, circlePaint);
+                final Vector2D circumcenter = triangle.getCircumcenter();
+                final double distance = circumcenter.distance(a);
+                canvas.drawCircle((float) circumcenter.x, (float) circumcenter.y, (float) distance, circlePaint);
+
+            }
+        } else {
+
+            final List<Polygon2D> polygons = voronoiGenerator.getPolygons();
+            for (int i = 0; i < polygons.size(); i++) {
+                final Polygon2D polygon = polygons.get(i);
+                final List<Vector2D> vertices = polygon.getVertices();
+
+                Path path = new Path();
+                path.reset();
+                path.moveTo((float) vertices.get(0).x, (float) vertices.get(0).y);
+                for (Vector2D vertice : vertices.subList(1, vertices.size())) {
+                    path.lineTo((float) vertice.x, (float) vertice.y);
+                }
+                canvas.drawPath(path, circlePaint);
+            }
 
         }
 
