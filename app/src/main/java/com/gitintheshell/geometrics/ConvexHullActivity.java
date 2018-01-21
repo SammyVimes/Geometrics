@@ -1,5 +1,7 @@
 package com.gitintheshell.geometrics;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -15,4 +17,10 @@ public class ConvexHullActivity extends AppCompatActivity {
 
         final ConvexHullView cV = (ConvexHullView) findViewById(R.id.frame);
     }
+
+    public static void start(Context context) {
+        Intent starter = new Intent(context, ConvexHullActivity.class);
+        context.startActivity(starter);
+    }
+
 }

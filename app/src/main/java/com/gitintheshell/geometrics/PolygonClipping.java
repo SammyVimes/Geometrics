@@ -1,5 +1,7 @@
 package com.gitintheshell.geometrics;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.CheckBox;
@@ -26,4 +28,10 @@ public class PolygonClipping extends AppCompatActivity {
         showIntersection.setOnCheckedChangeListener((buttonView, isChecked) -> pCV.setShowIntersection(isChecked));
 
     }
+
+    public static void start(Context context) {
+        Intent starter = new Intent(context, PolygonClipping.class);
+        context.startActivity(starter);
+    }
+
 }

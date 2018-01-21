@@ -1,5 +1,7 @@
 package com.gitintheshell.geometrics;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Button;
@@ -19,6 +21,9 @@ public class Delaunay extends AppCompatActivity {
         setVoronoi.setOnClickListener(v -> dV.setDelaunayMode(false));
     }
 
-
+    public static void start(Context context) {
+        Intent starter = new Intent(context, Delaunay.class);
+        context.startActivity(starter);
+    }
 
 }
