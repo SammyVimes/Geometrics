@@ -12,4 +12,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <CheckBox
+        android:checked="true"
+        android:text="Показывать первый полигон"
+        android:id="@+id/show_first_poly"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:checked="true"
+        android:text="Показывать второй полигон"
+        android:id="@+id/show_second_poly"
+        android:layout_below="@id/show_first_poly"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:checked="true"
+        android:text="Показывать пересечение"
+        android:id="@+id/show_intersection"
+        android:layout_below="@id/show_second_poly"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
 </RelativeLayout>

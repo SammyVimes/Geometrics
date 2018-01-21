@@ -31,6 +31,25 @@ public class PolygonClippingView extends FrameLayout {
     private Paint intersectionPolyPointPaint = new Paint();
     private Paint intersectionPolyPaint = new Paint();
 
+    private boolean showFirstPoly = true;
+    private boolean showSecondPoly = true;
+    private boolean showIntersection = true;
+
+    public void setShowFirstPoly(final boolean showFirstPoly) {
+        this.showFirstPoly = showFirstPoly;
+        postInvalidateDelayed(10);
+    }
+
+    public void setShowSecondPoly(final boolean showSecondPoly) {
+        this.showSecondPoly = showSecondPoly;
+        postInvalidateDelayed(10);
+    }
+
+    public void setShowIntersection(final boolean showIntersection) {
+        this.showIntersection = showIntersection;
+        postInvalidateDelayed(10);
+    }
+
     public PolygonClippingView(@NonNull final Context context) {
         super(context);
         init();
@@ -142,9 +161,15 @@ public class PolygonClippingView extends FrameLayout {
     protected void onDraw(final Canvas canvas) {
         super.onDraw(canvas);
 
-        drawPolygon(canvas, subject, firstPolyPaint, firstPolyPointPaint);
-        drawPolygon(canvas, clipper, secondPolyPaint, secondPolyPointPaint);
-        drawPolygon(canvas, result, intersectionPolyPaint, intersectionPolyPointPaint);
+        if (showFirstPoly) {
+            drawPolygon(canvas, subject, firstPolyPaint, firstPolyPointPaint);
+        }
+        if (showSecondPoly) {
+            drawPolygon(canvas, clipper, secondPolyPaint, secondPolyPointPaint);
+        }
+        if (showIntersection) {
+            drawPolygon(canvas, result, intersectionPolyPaint, intersectionPolyPointPaint);
+        }
     }
 
     private void drawPolygon(final Canvas canvas, List<double[]> points, Paint paint, final Paint pointPaint) {
