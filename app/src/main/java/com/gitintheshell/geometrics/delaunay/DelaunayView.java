@@ -9,13 +9,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 import android.util.AttributeSet;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.widget.FrameLayout;
 
+import com.gitintheshell.geometrics.PointsView;
 import com.gitintheshell.geometrics.base.NotEnoughPointsException;
 import com.gitintheshell.geometrics.base.Triangle2D;
 import com.gitintheshell.geometrics.base.Vector2D;
+import com.gitintheshell.geometrics.voronoi.GraphEdge;
+import com.gitintheshell.geometrics.voronoi.Voronoi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,32 +23,23 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import com.gitintheshell.geometrics.voronoi.GraphEdge;
-import com.gitintheshell.geometrics.voronoi.Voronoi;
-
 /**
  * Created by Semyon on 20.01.2018.
  */
 
-public class DelaunayView extends FrameLayout implements GestureDetector.OnGestureListener {
+public class DelaunayView extends PointsView {
 
+    //    VoronoiGeneratorOld voronoiGeneratorOld = new VoronoiGeneratorOld();
+    List<GraphEdge> graphEdges = new ArrayList<>();
+    Voronoi voronoi = new Voronoi(1.0d);
+    volatile boolean ready = true;
     private DelaunayTriangulator delaunayTriangulator;
     private List<Vector2D> pointSet = new ArrayList<>();
     private Paint paint = new Paint();
     private Paint circlePaint = new Paint();
     private Paint voronoiPaint = new Paint();
-    private Paint pointPaint = new Paint();
-
     private boolean delaunayMode = true;
-
-//    VoronoiGeneratorOld voronoiGeneratorOld = new VoronoiGeneratorOld();
-    List<GraphEdge> graphEdges = new ArrayList<>();
-    Voronoi voronoi = new Voronoi(1.0d);
-
-    public void setDelaunayMode(final boolean delaunayMode) {
-        this.delaunayMode = delaunayMode;
-        invalidate();
-    }
+    private Executor executor = Executors.newSingleThreadExecutor();
 
     public DelaunayView(@NonNull final Context context) {
         super(context);
@@ -70,12 +61,12 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
         init();
     }
 
+    public void setDelaunayMode(final boolean delaunayMode) {
+        this.delaunayMode = delaunayMode;
+        invalidate();
+    }
+
     private void init() {
-        this.setWillNotDraw(false);
-
-        final GestureDetector gestureDetector = new GestureDetector(this.getContext(), this);
-        setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
-
         paint.setColor(Color.RED);
         paint.setStrokeWidth(3.0f);
         circlePaint.setStyle(Paint.Style.STROKE);
@@ -83,17 +74,11 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
         circlePaint.setStrokeWidth(5.0f);
         delaunayTriangulator = new DelaunayTriangulator(pointSet);
 
-        pointPaint = new Paint();
-        pointPaint.setColor(Color.MAGENTA);
-        pointPaint.setStrokeWidth(30.0f);
-
         voronoiPaint.setStyle(Paint.Style.STROKE);
         voronoiPaint.setColor(Color.GREEN);
         voronoiPaint.setStrokeWidth(5.0f);
 
     }
-
-    private Executor executor = Executors.newSingleThreadExecutor();
 
     private void retriangulate() {
 
@@ -122,11 +107,6 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
 
     @Override
     protected void onDraw(final Canvas canvas) {
-        canvas.drawColor(Color.BLACK);
-
-        for (Vector2D a : pointSet) {
-            canvas.drawPoint((float) a.x, (float) a.y, pointPaint);
-        }
 
         if (!ready) {
             return;
@@ -194,41 +174,9 @@ public class DelaunayView extends FrameLayout implements GestureDetector.OnGestu
     }
 
     @Override
-    public boolean onDown(final MotionEvent e) {
-        return true;
-    }
-
-    @Override
-    public void onShowPress(final MotionEvent e) {
-
-    }
-
-    volatile boolean ready = true;
-
-    @Override
-    public boolean onSingleTapUp(final MotionEvent e) {
-        final float x = e.getX();
-        final float y = e.getY();
-        pointSet.add(new Vector2D(x, y));
-        invalidate();
+    protected void onNewPoint(final Vector2D newPoint) {
         ready = false;
         retriangulate();
-        return true;
-    }
-
-    @Override
-    public boolean onScroll(final MotionEvent e1, final MotionEvent e2, final float distanceX, final float distanceY) {
-        return false;
-    }
-
-    @Override
-    public void onLongPress(final MotionEvent e) {
-
-    }
-
-    @Override
-    public boolean onFling(final MotionEvent e1, final MotionEvent e2, final float velocityX, final float velocityY) {
-        return false;
     }
 
 }
