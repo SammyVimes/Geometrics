@@ -127,6 +127,10 @@ public class Graham {
         hullPoints.add(points.remove(0));
         hullPoints.add(points.remove(0));
 
+        if (points.isEmpty()) {
+            return hullPoints;
+        }
+
         //scan is repeated until no concave points are present.
         while (true) {
             Vector2D p0, p1, p2;

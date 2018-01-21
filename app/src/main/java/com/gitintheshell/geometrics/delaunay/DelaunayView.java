@@ -34,7 +34,6 @@ public class DelaunayView extends PointsView {
     Voronoi voronoi = new Voronoi(1.0d);
     volatile boolean ready = true;
     private DelaunayTriangulator delaunayTriangulator;
-    private List<Vector2D> pointSet = new ArrayList<>();
     private Paint paint = new Paint();
     private Paint circlePaint = new Paint();
     private Paint voronoiPaint = new Paint();
@@ -107,6 +106,7 @@ public class DelaunayView extends PointsView {
 
     @Override
     protected void onDraw(final Canvas canvas) {
+        super.onDraw(canvas);
 
         if (!ready) {
             return;
@@ -169,8 +169,6 @@ public class DelaunayView extends PointsView {
 //            }
 
         }
-
-        super.onDraw(canvas);
     }
 
     @Override

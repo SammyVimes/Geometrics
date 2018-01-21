@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 
 public class PointsView extends FrameLayout implements GestureDetector.OnGestureListener {
 
-    private List<Vector2D> pointSet = new ArrayList<>();
+    protected List<Vector2D> pointSet = new ArrayList<>();
     private Paint pointPaint = new Paint();
 
 
@@ -92,8 +92,6 @@ public class PointsView extends FrameLayout implements GestureDetector.OnGesture
     public void onShowPress(final MotionEvent e) {
 
     }
-
-    volatile boolean ready = true;
 
     @Override
     public boolean onSingleTapUp(final MotionEvent e) {
